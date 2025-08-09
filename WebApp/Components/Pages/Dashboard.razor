@@ -1,0 +1,109 @@
+﻿@using System.Diagnostics
+@using WebApp.Models;
+@page "/Dashboard"
+@rendermode InteractiveServer
+
+@inject WebApp.Services.JobDescriptionService JDService
+@inject WebApp.Services.Repositories.JobDescriptionRespository JobDescriptionRespository
+
+<div class="w-[100vw] h-[100vh] bg-[#F3F4F5] flex flex-row">
+    <div class="flex flex-col w-[30%] h-full bg-[#F6F8FA] p-10">
+        <h1 class="text-3xl mb-10">Job Descriptions</h1>
+        @foreach (JobDescription description in JobDescriptions)
+        {
+            var newJobs = description.NewJobs.Count();
+            <div class="flex items-center bg-white rounded-md py-4 pr-4 mb-3 shadow relative">
+                @if (newJobs > 0)
+                {
+                    <div class="w-1 h-[75%] bg-blue-600 rounded-r-md my-auto"></div>
+
+                }
+                <div class="ml-4">
+                    <div class="font-semibold text-gray-900">@description.Name</div>
+                    <div class="text-sm text-gray-500">@newJobs new jobs</div>
+                </div>
+            </div>
+        }
+        <button class="h-[5%] m-5 mt-auto bg-[#3C9AF2] text-white rounded-lg">Add</button>
+    </div>
+    <div class="flex flex-col w-[30%] h-full bg-white p-10 gap-[20px] overflow-scroll">
+        @if(JobDescriptions.Count == 0)
+        {
+            <h1>Loading...</h1>
+        } else
+        {
+
+            var currentJobDescription = JobDescriptions[0];
+            <h1 class="text-3xl">@currentJobDescription.Name</h1>
+
+            <h3 class="text-md">Last updated @TimeAgo(currentJobDescription.Providers.Select(p => p.LastScraped).Max())</h3>
+            <input class="h-[5%] rounded-md bg-[#FFFFFE] border p-5" type="text" @bind-value="jobSearch" @bind-value:event="oninput" />
+            <p>Value: @jobSearch</p>
+            @foreach (JobProvider provider in currentJobDescription.Providers)
+            {
+                @foreach (Job job in FilteredJobs)
+                {
+                    <div class="flex justify-between items-center border rounded-lg p-4 h-[15%]">
+                        <!-- Left section -->
+                        <div class="h-full flex flex-col items-around">
+                            <h2 class="font-semibold text-xl">@job.Title</h2>
+                            <p class="text-sm text-gray-700">@provider.Name</p>
+                        </div>
+
+                        <!-- Right section -->
+                        <div class="flex flex-col items-end gap-1">
+                            <a href="@job.Url"
+                            target="_blank"
+                            class="px-3 py-1 rounded-lg border border-gray-300 bg-gray-50 text-blue-600 text-sm hover:bg-gray-100">
+                                Apply
+                            </a>
+                            <p class="text-sm text-gray-700">@job.Location</p>
+                        </div>
+                    </div>
+                }
+            }
+        }
+
+    </div>
+    <div class="flex flex-col w-[40%] h-full bg-[#F7F8FA]">
+
+    </div>
+</div>
+
+@code {
+
+    public static string TimeAgo(DateTimeOffset dateTime)
+    {
+        var now = DateTimeOffset.Now;
+        var span = now - dateTime;
+
+        if (span.TotalDays >= 1)
+            return $"{(int)span.TotalDays} day{(span.TotalDays == 1 ? "" : "s")} ago";
+        else if (span.TotalHours >= 1)
+            return $"{(int)span.TotalHours} hour{(span.TotalHours == 1 ? "" : "s")} ago";
+        else if (span.TotalMinutes >= 1)
+            return $"{(int)span.TotalMinutes} minute{(span.TotalMinutes == 1 ? "" : "s")} ago";
+        else
+            return "just now";
+    }
+
+    public string jobSearch { get; set; } = "";
+
+    public List<Job> Jobs { get; set; } = new List<Job>();
+
+    private List<Job> FilteredJobs =>
+        Jobs.Where(item => string.IsNullOrEmpty(jobSearch) || item.Title!.Contains(jobSearch, StringComparison.CurrentCultureIgnoreCase)).ToList();
+
+    List<JobDescription> JobDescriptions = new List<JobDescription>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        JobDescriptions = await JobDescriptionRespository.ReadAllAsync();
+        foreach (var jd in JobDescriptions)
+        {
+            Jobs.AddRange(await JDService.GetJobs(jd));
+        }
+    }
+
+    //List<JobDescription> JobDescriptions = await JobDescriptionRespository.ReadAllAsync();
+}
