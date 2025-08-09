@@ -7,8 +7,10 @@ namespace WebApp.Models
         public int Id { get; set; }
         public string? Name { get; set; }
 
+        public ICollection<string>? Locations { get; set; }
         public ICollection<string>? GlobalKeyWords { get; set; }
         public ICollection<JobProvider> Providers { get; set; } = [];
+
 
         [NotMapped]
         public IEnumerable<Job> ActiveJobs => Providers

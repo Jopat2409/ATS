@@ -96,6 +96,9 @@ namespace WebApp.Migrations
                     b.PrimitiveCollection<string>("GlobalKeyWords")
                         .HasColumnType("nvarchar(max)");
 
+                    b.PrimitiveCollection<string>("Locations")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 

@@ -8,11 +8,14 @@
 
 <div class="w-[100vw] h-[100vh] bg-[#F3F4F5] flex flex-row">
     <div class="flex flex-col w-[30%] h-full bg-[#F6F8FA] p-10">
-        <h1 class="text-3xl mb-10">Job Descriptions</h1>
+        <div class="flex flex-row justify-between items-end mb-10">
+            <h1 class="text-3xl">Job Descriptions</h1>
+            <i class="fa fa-gear p-1 border border-1 rounded-sm"></i>
+        </div>
         @foreach (JobDescription description in JobDescriptions)
         {
             var newJobs = description.NewJobs.Count();
-            <div class="flex items-center bg-white rounded-md py-4 pr-4 mb-3 shadow relative">
+            <div class="flex items-center bg-white rounded-md py-4 pr-4 mb-3 shadow relative hover:cursor-pointer hover:shadow-4" @onclick="() => CurrentJobDescription = description">
                 @if (newJobs > 0)
                 {
                     <div class="w-1 h-[75%] bg-blue-600 rounded-r-md my-auto"></div>
@@ -24,49 +27,58 @@
                 </div>
             </div>
         }
-        <button class="h-[5%] m-5 mt-auto bg-[#3C9AF2] text-white rounded-lg">Add</button>
     </div>
-    <div class="flex flex-col w-[30%] h-full bg-white p-10 gap-[20px] overflow-scroll">
+    <div class="flex flex-col w-[30%] h-full bg-white p-10 gap-[20px] overflow-y-scroll">
         @if(JobDescriptions.Count == 0)
         {
-            <h1>Loading...</h1>
+            <h1>Add a job description and begin adding providers</h1>
+        } else if (CurrentJobDescription == null)
+        {
+            <h1>Select a job Description</h1>
         } else
         {
 
-            var currentJobDescription = JobDescriptions[0];
-            <h1 class="text-3xl">@currentJobDescription.Name</h1>
+            <h1 class="text-3xl">@CurrentJobDescription.Name</h1>
 
-            <h3 class="text-md">Last updated @TimeAgo(currentJobDescription.Providers.Select(p => p.LastScraped).Max())</h3>
-            <input class="h-[5%] rounded-md bg-[#FFFFFE] border p-5" type="text" @bind-value="jobSearch" @bind-value:event="oninput" />
-            <p>Value: @jobSearch</p>
-            @foreach (JobProvider provider in currentJobDescription.Providers)
+            @if (CurrentJobDescription.Providers.Count == 0)
             {
-                @foreach (Job job in FilteredJobs)
-                {
-                    <div class="flex justify-between items-center border rounded-lg p-4 h-[15%]">
-                        <!-- Left section -->
-                        <div class="h-full flex flex-col items-around">
-                            <h2 class="font-semibold text-xl">@job.Title</h2>
-                            <p class="text-sm text-gray-700">@provider.Name</p>
-                        </div>
+                <h1>Add job providers to start browsing jobs</h1>
+            } else
+            {
 
-                        <!-- Right section -->
-                        <div class="flex flex-col items-end gap-1">
-                            <a href="@job.Url"
-                            target="_blank"
-                            class="px-3 py-1 rounded-lg border border-gray-300 bg-gray-50 text-blue-600 text-sm hover:bg-gray-100">
-                                Apply
-                            </a>
-                            <p class="text-sm text-gray-700">@job.Location</p>
+                <h3 class="text-md">Last updated @TimeAgo(CurrentJobDescription.Providers.Select(p => p.LastScraped).Max())</h3>
+                <input class="h-[5%] rounded-md bg-[#FFFFFE] border p-5" type="text" @bind-value="jobSearch" @bind-value:event="oninput" />
+                <p>Value: @jobSearch</p>
+                @foreach (JobProvider provider in CurrentJobDescription.Providers)
+                {
+                    @foreach (Job job in FilteredJobs)
+                    {
+                        <div class="flex justify-between items-center border rounded-lg p-4 h-[15%]">
+                            <!-- Left section -->
+                            <div class="h-full flex flex-col items-around">
+                                <h2 class="font-semibold text-xl">@job.Title</h2>
+                                <p class="text-sm text-gray-700">@provider.Name</p>
+                            </div>
+
+                            <!-- Right section -->
+                            <div class="flex flex-col items-end gap-1">
+                                <a href="@job.Url"
+                                target="_blank"
+                                class="px-3 py-1 rounded-lg border border-gray-300 bg-gray-50 text-blue-600 text-sm hover:bg-gray-100">
+                                    Apply
+                                </a>
+                                <p class="text-sm text-gray-700">@job.Location</p>
+                            </div>
                         </div>
-                    </div>
+                    }
                 }
             }
+
         }
 
     </div>
     <div class="flex flex-col w-[40%] h-full bg-[#F7F8FA]">
-
+        <JobDescriptionAdd OnDescriptionAdded="ReloadDescriptions"/>
     </div>
 </div>
 
@@ -87,6 +99,11 @@
             return "just now";
     }
 
+    private async Task ReloadDescriptions()
+    {
+        JobDescriptions = await JobDescriptionRespository.ReadAllAsync();
+    }
+
     public string jobSearch { get; set; } = "";
 
     public List<Job> Jobs { get; set; } = new List<Job>();
@@ -96,6 +113,8 @@
 
     List<JobDescription> JobDescriptions = new List<JobDescription>();
 
+    JobDescription? CurrentJobDescription;
+
     protected override async Task OnInitializedAsync()
     {
         JobDescriptions = await JobDescriptionRespository.ReadAllAsync();
@@ -103,6 +122,8 @@
         {
             Jobs.AddRange(await JDService.GetJobs(jd));
         }
+
+        CurrentJobDescription = JobDescriptions.FirstOrDefault();
     }
 
     //List<JobDescription> JobDescriptions = await JobDescriptionRespository.ReadAllAsync();

@@ -5,49 +5,55 @@ using WebApp.Models;
 
 namespace WebApp.Services.Repositories
 {
-    public class JobRepository(WebAppContext db) : IAsyncRepository<Job>
+    public class JobRepository(IDbContextFactory<WebAppContext> db) : IAsyncRepository<Job>
     {
 
-        private readonly WebAppContext _db = db;
-        private readonly DbSet<Job> _jobs = db.Job;
+        private readonly IDbContextFactory<WebAppContext> _contextFactory = db;
 
         public async Task<Job> CreateAsync(Job t)
         {
-            _jobs.Add(t);
-            await _db.SaveChangesAsync();
+            using var context = await _contextFactory.CreateDbContextAsync();
+            context.Job.Add(t);
+            await context.SaveChangesAsync();
             return t;
         }
 
         public async Task DeleteAsync(Job t)
         {
-            _jobs.Remove(t);
-            await _db.SaveChangesAsync();
+            using var context = await _contextFactory.CreateDbContextAsync();
+            context.Job.Remove(t);
+            await context.SaveChangesAsync();
         }
 
-        public Task<List<Job>> ReadAllAsync()
+        public async Task<List<Job>> ReadAllAsync()
         {
-            return _jobs.ToListAsync();
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Job.ToListAsync();
         }
 
-        public Task<List<Job>> ReadAllAsync(Expression<Func<Job, bool>> criteria)
+        public async Task<List<Job>> ReadAllAsync(Expression<Func<Job, bool>> criteria)
         {
-            return _jobs.Where(criteria).ToListAsync();
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Job.Where(criteria).ToListAsync();
         }
 
-        public Task<Job?> ReadOneAsync(int id)
+        public async Task<Job?> ReadOneAsync(int id)
         {
-            return _jobs.Where(p => p.Id == id).FirstOrDefaultAsync();
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Job.FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        public Task<Job?> ReadOneAsync(Expression<Func<Job, bool>> criteria)
+        public async Task<Job?> ReadOneAsync(Expression<Func<Job, bool>> criteria)
         {
-            return _jobs.Where(criteria).FirstOrDefaultAsync();
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Job.FirstOrDefaultAsync(criteria);
         }
 
         public async Task<Job> UpdateAsync(Job t)
         {
-            _jobs.Update(t);
-            await _db.SaveChangesAsync();
+            using var context = await _contextFactory.CreateDbContextAsync();
+            context.Job.Update(t);
+            await context.SaveChangesAsync();
 
             return t;
         }

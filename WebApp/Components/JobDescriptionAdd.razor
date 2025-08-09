@@ -1,0 +1,54 @@
+﻿@using WebApp.Models;
+
+@inject IJSRuntime JS
+@inject WebApp.Services.Repositories.JobDescriptionRespository JobDescriptionRepo
+@inject WebApp.Services.Repositories.JobProviderRespository JobProviderRepo
+
+
+<EditForm method="post" Model="CreatedJobDescription" OnValidSubmit="AddJobDescription" FormName="create" Enhance class="p-10">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="text-danger" role="alert" />
+    <div class="mb-3">
+        <label for="name" class="form-label">Job Title:</label>
+        <InputText id="name" @bind-Value="CreatedJobDescription.Name" class="form-control" />
+        <ValidationMessage For="() => CreatedJobDescription.Name" class="text-danger" />
+    </div>
+
+    <div class="mb-3">
+        <label for="default-providers" class="form-label">
+            Default Providers:
+        </label>
+        <InputSelect multiple @bind-value="SelectedProviders" class="form-control">
+            <option value="" style="text-align:center" disabled>@(ConfiguredProviders.Count == 0 ? "No Configured Providers" : "-- Select Provider --")</option>
+            @foreach (var provider in ConfiguredProviders)
+            {
+                <option value="@provider.Id" selected="@SelectedProviders.Contains(provider.Id)">
+                    @provider.Name
+                </option>
+            }
+        </InputSelect>
+    </div>
+    <button type="submit" class="btn btn-primary">Create</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public EventCallback OnDescriptionAdded { get; set; }
+
+    public JobDescription CreatedJobDescription { get; set; } = new();
+
+    public List<JobProvider> ConfiguredProviders { get; set; } = new();
+    public List<int> SelectedProviders { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        ConfiguredProviders = await JobProviderRepo.ReadAllAsync();
+    }
+
+
+    private async Task AddJobDescription()
+    {
+        await JobDescriptionRepo.CreateAsync(CreatedJobDescription);
+        await OnDescriptionAdded.InvokeAsync();
+    }
+}

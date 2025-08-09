@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace WebApp.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialSchema : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -18,7 +18,8 @@ namespace WebApp.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    GlobalKeyWords = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Locations = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    GlobalKeyWords = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -33,22 +34,17 @@ namespace WebApp.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Url = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Class_JobCard = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Class_JobLocation = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Class_JobDescription = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Class_JobTitle = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Class_JobLink = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    KeyWords = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    JobDescriptionId = table.Column<int>(type: "int", nullable: true)
+                    Class_NextPage = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastScraped = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    KeyWords = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_JobProvider", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_JobProvider_JobDescription_JobDescriptionId",
-                        column: x => x.JobDescriptionId,
-                        principalTable: "JobDescription",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -79,15 +75,39 @@ namespace WebApp.Migrations
                         principalColumn: "Id");
                 });
 
+            migrationBuilder.CreateTable(
+                name: "JobDescriptionJobProvider",
+                columns: table => new
+                {
+                    DescriptionsId = table.Column<int>(type: "int", nullable: false),
+                    ProvidersId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_JobDescriptionJobProvider", x => new { x.DescriptionsId, x.ProvidersId });
+                    table.ForeignKey(
+                        name: "FK_JobDescriptionJobProvider_JobDescription_DescriptionsId",
+                        column: x => x.DescriptionsId,
+                        principalTable: "JobDescription",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_JobDescriptionJobProvider_JobProvider_ProvidersId",
+                        column: x => x.ProvidersId,
+                        principalTable: "JobProvider",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Job_JobProviderId",
                 table: "Job",
                 column: "JobProviderId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_JobProvider_JobDescriptionId",
-                table: "JobProvider",
-                column: "JobDescriptionId");
+                name: "IX_JobDescriptionJobProvider_ProvidersId",
+                table: "JobDescriptionJobProvider",
+                column: "ProvidersId");
         }
 
         /// <inheritdoc />
@@ -97,10 +117,13 @@ namespace WebApp.Migrations
                 name: "Job");
 
             migrationBuilder.DropTable(
-                name: "JobProvider");
+                name: "JobDescriptionJobProvider");
 
             migrationBuilder.DropTable(
                 name: "JobDescription");
+
+            migrationBuilder.DropTable(
+                name: "JobProvider");
         }
     }
 }

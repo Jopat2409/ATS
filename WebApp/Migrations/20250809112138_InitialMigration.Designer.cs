@@ -12,8 +12,8 @@ using WebApp.Data;
 namespace WebApp.Migrations
 {
     [DbContext(typeof(WebAppContext))]
-    [Migration("20250809001915_KeywordNullable")]
-    partial class KeywordNullable
+    [Migration("20250809112138_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,21 @@ namespace WebApp.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("JobDescriptionJobProvider", b =>
+                {
+                    b.Property<int>("DescriptionsId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProvidersId")
+                        .HasColumnType("int");
+
+                    b.HasKey("DescriptionsId", "ProvidersId");
+
+                    b.HasIndex("ProvidersId");
+
+                    b.ToTable("JobDescriptionJobProvider");
+                });
 
             modelBuilder.Entity("WebApp.Models.Job", b =>
                 {
@@ -84,6 +99,9 @@ namespace WebApp.Migrations
                     b.PrimitiveCollection<string>("GlobalKeyWords")
                         .HasColumnType("nvarchar(max)");
 
+                    b.PrimitiveCollection<string>("Locations")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
@@ -100,9 +118,6 @@ namespace WebApp.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Class_JobCard")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Class_JobDescription")
                         .HasColumnType("nvarchar(max)");
 
@@ -115,11 +130,14 @@ namespace WebApp.Migrations
                     b.Property<string>("Class_JobTitle")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("JobDescriptionId")
-                        .HasColumnType("int");
+                    b.Property<string>("Class_NextPage")
+                        .HasColumnType("nvarchar(max)");
 
                     b.PrimitiveCollection<string>("KeyWords")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("LastScraped")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
@@ -129,9 +147,22 @@ namespace WebApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("JobDescriptionId");
-
                     b.ToTable("JobProvider");
+                });
+
+            modelBuilder.Entity("JobDescriptionJobProvider", b =>
+                {
+                    b.HasOne("WebApp.Models.JobDescription", null)
+                        .WithMany()
+                        .HasForeignKey("DescriptionsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WebApp.Models.JobProvider", null)
+                        .WithMany()
+                        .HasForeignKey("ProvidersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("WebApp.Models.Job", b =>
@@ -139,18 +170,6 @@ namespace WebApp.Migrations
                     b.HasOne("WebApp.Models.JobProvider", null)
                         .WithMany("Jobs")
                         .HasForeignKey("JobProviderId");
-                });
-
-            modelBuilder.Entity("WebApp.Models.JobProvider", b =>
-                {
-                    b.HasOne("WebApp.Models.JobDescription", null)
-                        .WithMany("Providers")
-                        .HasForeignKey("JobDescriptionId");
-                });
-
-            modelBuilder.Entity("WebApp.Models.JobDescription", b =>
-                {
-                    b.Navigation("Providers");
                 });
 
             modelBuilder.Entity("WebApp.Models.JobProvider", b =>
