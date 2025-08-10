@@ -18,15 +18,7 @@
         <label for="default-providers" class="form-label">
             Default Providers:
         </label>
-        <InputSelect multiple @bind-value="SelectedProviders" class="form-control">
-            <option value="" style="text-align:center" disabled>@(ConfiguredProviders.Count == 0 ? "No Configured Providers" : "-- Select Provider --")</option>
-            @foreach (var provider in ConfiguredProviders)
-            {
-                <option value="@provider.Id" selected="@SelectedProviders.Contains(provider.Id)">
-                    @provider.Name
-                </option>
-            }
-        </InputSelect>
+        <p>Selected: @string.Join(", ", SelectedProviders)</p>
     </div>
     <button type="submit" class="btn btn-primary">Create</button>
 </EditForm>
@@ -38,7 +30,7 @@
     public JobDescription CreatedJobDescription { get; set; } = new();
 
     public List<JobProvider> ConfiguredProviders { get; set; } = new();
-    public List<int> SelectedProviders { get; set; } = [];
+    public HashSet<int> SelectedProviders { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {

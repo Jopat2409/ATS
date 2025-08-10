@@ -1,0 +1,22 @@
+﻿@typeparam Item
+
+<flex class="flex @ClassName">
+    <button class="flex w-full items-center justify-between rounded border border-gray-400 bg-gray-100 hover:bg-gray-200">
+        <span class="px-4 py-2 h-full">Configure Default Providers</span>
+        <span class="flex items-center gap-1 px-3 py-2 border-l border-gray-400 bg-gray-200 h-full">
+            <i class="fa fa-gear"></i>
+            <i class="fa fa-caret-down transform transition-transform duration-300 ease-in-out"></i>
+        </span>
+    </button>
+
+</flex>
+
+@code
+{
+    [Parameter]
+    public List<Item> items { get; set; } = new();
+
+    [Parameter]
+    public string ClassName { get; set; } = "";
+
+}
