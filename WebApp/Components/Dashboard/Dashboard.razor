@@ -36,7 +36,7 @@
             <div>Back To Application</div>
         </a>
     </div>
-    <div class="flex flex-col w-[30%] h-full bg-white p-10 gap-[20px] overflow-y-scroll">
+    <div class="flex flex-col w-[30%] h-full bg-white p-10 gap-[20px]">
         @if(JobDescriptions.Count == 0)
         {
             <h1>Add a job description and begin adding providers</h1>
@@ -56,29 +56,31 @@
 
                 <h3 class="text-md">Last updated @TimeAgo(CurrentJobDescription.Providers.Select(p => p.LastScraped).Max())</h3>
                 <input class="h-[5%] rounded-md bg-[#FFFFFE] border p-5" type="text" @bind-value="jobSearch" @bind-value:event="oninput" />
-                @foreach (JobProvider provider in CurrentJobDescription.Providers)
-                {
-                    @foreach (Job job in FilteredJobs)
+                <div class="w-full flex flex-col overflow-y-scroll flex-grow gap-[20px]">
+                    @foreach (JobProvider provider in CurrentJobDescription.Providers)
                     {
-                        <div class="flex justify-between items-center border rounded-lg p-4 h-[15%]">
-                            <!-- Left section -->
-                            <div class="h-full flex flex-col items-around">
-                                <h2 class="font-semibold text-xl">@job.Title</h2>
-                                <p class="text-sm text-gray-700">@provider.Name</p>
-                            </div>
+                        @foreach (Job job in FilteredJobs)
+                        {
+                            <div class="flex justify-between items-center border rounded-lg p-4 h-[15%]">
+                                <!-- Left section -->
+                                <div class="h-full flex flex-col items-around">
+                                    <h2 class="font-semibold text-xl">@job.Title</h2>
+                                    <p class="text-sm text-gray-700">@provider.Name</p>
+                                </div>
 
-                            <!-- Right section -->
-                            <div class="flex flex-col items-end gap-1">
-                                <a href="@job.Url"
-                                target="_blank"
-                                class="px-3 py-1 rounded-lg border border-gray-300 bg-gray-50 text-blue-600 text-sm hover:bg-gray-100">
-                                    Apply
-                                </a>
-                                <p class="text-sm text-gray-700">@job.Location</p>
+                                <!-- Right section -->
+                                <div class="flex flex-col items-end gap-1">
+                                    <a href="@job.Url"
+                                       target="_blank"
+                                       class="px-3 py-1 rounded-lg border border-gray-300 bg-gray-50 text-blue-600 text-sm hover:bg-gray-100">
+                                        Apply
+                                    </a>
+                                    <p class="text-sm text-gray-700">@job.Location</p>
+                                </div>
                             </div>
-                        </div>
+                        }
                     }
-                }
+                </div>
             }
 
         }

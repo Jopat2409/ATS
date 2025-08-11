@@ -17,6 +17,8 @@ builder.Services.AddScoped<JobDescriptionRespository>();
 
 builder.Services.AddScoped<JobDescriptionService>();
 
+builder.Services.AddScoped<DropdownService>();
+
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
