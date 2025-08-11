@@ -2,11 +2,15 @@
 <div class="flex flex-col w-full border-l-[#3F79DB] border-l-4">
     <button class="w-full bg-[#D9D9D9] flex flex-row justify-start py-1 px-2 gap-2 items-center" @onclick="ToggleOpen">
         <i class="fa fa-caret-down transform transition-transform duration-300 ease-in-out @GetCaretRotation()"></i>
-        @Title
+        @Title 
+        @if(Modified) 
+        {
+            <span class="text-[#FF0000]"> *</span>
+        }
     </button>
     @if (IsOpen)
     {
-        <div class="w-full bg-white p-2 max-height-0">
+        <div class="w-full bg-white p-4 max-height-0">
             @ChildContent
         </div>
     }
@@ -18,6 +22,9 @@
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public bool Modified { get; set; }
 
     protected bool IsOpen { get; set; } = true;
 

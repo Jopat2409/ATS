@@ -17,6 +17,9 @@ namespace WebApp.Models
         public string? Class_JobLink { get; set; }
         public string? Class_NextPage { get; set; }
 
+        [DefaultValue(false)]
+        public bool CloudflareBlocked { get; set; }
+
         public DateTimeOffset LastScraped { get; set; }
 
         public ICollection<Job> Jobs { get; set; } = [];

@@ -1,0 +1,26 @@
+[
+  {
+    "Name": "MAUI Build Debug",
+    "Projects": [
+      {
+        "Path": "WebApp\\WebApp.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "MauiWebView\\MauiWebView.csproj",
+        "Action": "Start",
+        "DebugTarget": "Windows Machine"
+      }
+    ]
+  },
+  {
+    "Name": "WebApp Build Debug",
+    "Projects": [
+      {
+        "Path": "WebApp\\WebApp.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
+      }
+    ]
+  }
+]

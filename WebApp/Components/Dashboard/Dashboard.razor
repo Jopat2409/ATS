@@ -56,7 +56,6 @@
 
                 <h3 class="text-md">Last updated @TimeAgo(CurrentJobDescription.Providers.Select(p => p.LastScraped).Max())</h3>
                 <input class="h-[5%] rounded-md bg-[#FFFFFE] border p-5" type="text" @bind-value="jobSearch" @bind-value:event="oninput" />
-                <p>Value: @jobSearch</p>
                 @foreach (JobProvider provider in CurrentJobDescription.Providers)
                 {
                     @foreach (Job job in FilteredJobs)
@@ -91,6 +90,10 @@
             <h1 class="text-3xl">Configure</h1>
         </div>
         <DescriptionAddForm OnDescriptionAdded="ReloadDescriptions"/>
+        @if (CurrentJobDescription != null)
+        {
+            <DescriptionEditForm JobDescription="CurrentJobDescription"/>
+        }
     </div>
 </div>
 

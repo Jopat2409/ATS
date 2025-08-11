@@ -14,15 +14,19 @@ namespace WebApp.Services.External
         {
             Debug.WriteLine($"Getting jobs for provider {provider.Name} from description {provider.Descriptions.FirstOrDefault(p => p.Id == provider.Id)?.Name}");
             var request = new HttpRequestMessage(HttpMethod.Get, provider.Url!);
-            request.Headers.Add("User-Agent",
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+            request.Headers.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
                 "AppleWebKit/537.36 (KHTML, like Gecko) " +
                 "Chrome/115.0.0.0 Safari/537.36");
-            request.Headers.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-            request.Headers.Add("Accept-Language", "en-US,en;q=0.5");
+            request.Headers.Referrer = new Uri("https://example.com/");
+            request.Headers.Accept.ParseAdd("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+            request.Headers.AcceptLanguage.ParseAdd("en-US,en;q=0.5");
 
             var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return [];
+            }
 
             var html = await response.Content.ReadAsStringAsync();
 

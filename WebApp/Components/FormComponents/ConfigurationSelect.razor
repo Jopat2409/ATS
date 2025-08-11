@@ -1,13 +1,22 @@
 ﻿@typeparam Item
 
-<flex class="flex @ClassName">
-    <button class="flex w-full items-center justify-between rounded border border-gray-400 bg-gray-100 hover:bg-gray-200">
-        <span class="px-4 py-2 h-full">Configure Default Providers</span>
-        <span class="flex items-center gap-1 px-3 py-2 border-l border-gray-400 bg-gray-200 h-full">
+<flex class="flex @ClassName inline-block relative">
+    <button class="flex w-full items-center justify-between rounded border border-gray-400 bg-gray-100 hover:bg-gray-200" @onclick="ToggleOpen">
+        <span class="px-4 h-full py-1">@Placeholder</span>
+        <span class="flex items-center gap-1 px-3 border-l border-gray-400 bg-gray-200 h-full py-1">
             <i class="fa fa-gear"></i>
             <i class="fa fa-caret-down transform transition-transform duration-300 ease-in-out"></i>
         </span>
     </button>
+
+    @if(IsOpen)
+    {
+        <div class="absolute left-0 w-full top-full z-40 h-[200px] bg-gray-100 rounded-md mt-2 border flex flex-col">
+            <div class="border border-black border-b-0 py-2"><i class="fa fa-gear"/>Add existing providers</div>
+            <div class="border border-black border-b-0 py-2">Add providers from other description</div>
+            <div class="border border-black py-2">Add custom provider</div>
+        </div>
+    }
 
 </flex>
 
@@ -18,5 +27,15 @@
 
     [Parameter]
     public string ClassName { get; set; } = "";
+
+    [Parameter]
+    public string Placeholder { get; set; } = "Configure Default Providers";
+
+    public bool IsOpen { get; set; } = false;
+
+    public void ToggleOpen()
+    {
+        IsOpen = !IsOpen;
+    }
 
 }

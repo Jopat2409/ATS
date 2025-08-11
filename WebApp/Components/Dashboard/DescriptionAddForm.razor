@@ -9,9 +9,9 @@
         <FormTextInput Label="Name" Placeholder="Job Description" OnValueChanged="OnNameChange" Value="@PartialJobDescription.Name"/>
         <FormTextInput Label="Key Words" Placeholder="Key Words (separated by ,)" OnValueChanged="OnKeyWordsChanged" Value="@KeyWords"/>
 
-        <div class="flex flex-row gap-5 mt-5">
+        <div class="flex flex-row gap-2 mt-5">
             <ConfigurationSelect Item="JobDescription" ClassName="flex-grow" />
-            <button class="rounded-md bg-[#F4F4F4] border border-1 px-5 py-2" @onclick="AddJobDescription">
+            <button class="rounded-md bg-[#F4F4F4] border border-1 px-5 py-1" @onclick="AddJobDescription">
                 Create
             </button>
         </div>

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using WebApp.Data;
 using WebApp.Models;
@@ -48,13 +49,59 @@ namespace WebApp.Services.Repositories
             return await context.JobDescription.Include(j => j.Providers).ThenInclude(p => p.Jobs).FirstOrDefaultAsync(criteria);
         }
 
+        public async Task AddProviderAsync(int id, JobProvider provider)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            await context.JobDescription
+                .Where(jd => jd.Id == id)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(p => p.Providers, p => p.Providers.Append(provider)
+                ));
+
+        }
+
         public async Task<JobDescription> UpdateAsync(JobDescription t)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
-            context.JobDescription.Update(t);
-            await context.SaveChangesAsync();
 
-            return t;
+            JobDescription? scopedDescription = await context.JobDescription.Include(d => d.Providers).ThenInclude(p => p.Jobs).FirstOrDefaultAsync(d => d.Id == t.Id);
+
+            if (scopedDescription == null) return await CreateAsync(t);
+
+            Debug.WriteLine($"Adding Job Description {t.Name} with Id {t.Id}");
+
+            context.Entry(scopedDescription).CurrentValues.SetValues(t);
+            
+            foreach (var provider in t.Providers)
+            {
+                var scopedProvider = scopedDescription.Providers.FirstOrDefault(p => p.Id == provider.Id);
+
+                if (scopedProvider != null)
+                {
+                    context.Entry(scopedProvider).CurrentValues.SetValues(provider);
+
+                    foreach (var job in provider.Jobs)
+                    {
+                        var scopedJob = scopedProvider.Jobs.FirstOrDefault(j => j.Id == job.Id);
+
+                        if (scopedJob != null)
+                        {
+                            context.Entry(scopedJob).CurrentValues.SetValues(job);
+                        } else
+                        {
+                            job.Provider = scopedProvider;
+                            scopedProvider.Jobs.Add(job);
+                        }
+                    }
+
+                } else
+                {
+                    scopedDescription.Providers.Add(provider);
+                }
+            }
+
+            await context.SaveChangesAsync();
+            return scopedDescription;
         }
     }
 }

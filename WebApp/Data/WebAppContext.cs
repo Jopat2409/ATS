@@ -18,17 +18,19 @@ namespace WebApp.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            var bae = new JobProvider()
+            {
+                Id = 1,
+                Name = "BAE Systems",
+                Url = "https://jobsearch.baesystems.com/search-and-apply",
+                Class_JobTitle = "div.job-card > h3",
+                Class_JobLink = "a.job-card__link",
+                Class_JobDescription = "div.job-card__text > p",
+                Class_JobLocation = "div.job-card__location",
+            };
+
             modelBuilder.Entity<JobProvider>().HasData(
-                new JobProvider() 
-                {
-                    Id = 1,
-                    Name = "BAE Systems", 
-                    Url = "https://jobsearch.baesystems.com/search-and-apply",
-                    Class_JobTitle = "div.job-card > h3",
-                    Class_JobLink = "a.job-card__link",
-                    Class_JobDescription = "div.job-card__text > p",
-                    Class_JobLocation = "div.job-card__location",
-                },
+                bae,
                 new JobProvider()
                 {
                     Id = 2,
@@ -48,6 +50,15 @@ namespace WebApp.Data
                     Class_JobLink = "div.jobs-title > b > a",
                     Class_JobLocation = "div.jobs-location > small",
                     Class_NextPage = "div.pager__item--next"
+                }
+            );
+
+            modelBuilder.Entity<JobDescription>().HasData(
+                new JobDescription() 
+                {
+                    Id = 1,
+                    Name = "Software Engineer",
+                    GlobalKeyWords = [ "junior", "entry", "grad" ],
                 }
             );
         }

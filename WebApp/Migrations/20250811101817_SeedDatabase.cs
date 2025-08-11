@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace WebApp.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigration : Migration
+    public partial class SeedDatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -39,6 +41,7 @@ namespace WebApp.Migrations
                     Class_JobTitle = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Class_JobLink = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Class_NextPage = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CloudflareBlocked = table.Column<bool>(type: "bit", nullable: false),
                     LastScraped = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                     KeyWords = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -97,6 +100,21 @@ namespace WebApp.Migrations
                         principalTable: "JobProvider",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.InsertData(
+                table: "JobDescription",
+                columns: new[] { "Id", "GlobalKeyWords", "Locations", "Name" },
+                values: new object[] { 1, "[\"junior\",\"entry\",\"grad\"]", null, "Software Engineer" });
+
+            migrationBuilder.InsertData(
+                table: "JobProvider",
+                columns: new[] { "Id", "Class_JobDescription", "Class_JobLink", "Class_JobLocation", "Class_JobTitle", "Class_NextPage", "CloudflareBlocked", "KeyWords", "LastScraped", "Name", "Url" },
+                values: new object[,]
+                {
+                    { 1, "div.job-card__text > p", "a.job-card__link", "div.job-card__location", "div.job-card > h3", null, false, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "BAE Systems", "https://jobsearch.baesystems.com/search-and-apply" },
+                    { 2, "div.job-card__text > p", "a.job-card__link", "div.job-card__location", "div.job-card > h3", null, false, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "Revolut", "https://www.revolut.com/careers/" },
+                    { 3, null, "div.jobs-title > b > a", "div.jobs-location > small", "a.jobs-title > b", "div.pager__item--next", false, null, new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "Nestle", "https://www.nestle.com/jobs/search-jobs" }
                 });
 
             migrationBuilder.CreateIndex(

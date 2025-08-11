@@ -1,0 +1,101 @@
+﻿@using WebApp.Components.FormComponents
+@using WebApp.Models
+
+@inject WebApp.Services.Repositories.JobDescriptionRespository JobDescriptionRespository
+
+
+@if (JobDescription != null && ModifiedJobDescription != null)
+{
+    <ConfigurationForm 
+        Title=@($"Edit {JobDescription.Name}") 
+        Modified=@IsModified
+    >
+        <div class="flex flex-col gap-2 rounded-md">
+
+            <FormTextInput 
+                Label="Name" 
+                Placeholder="Job Description" 
+                OnValueChanged="OnNameChange" 
+                Value="@ModifiedJobDescription.Name" 
+            />
+
+            <FormTextInput 
+                Label="Key Words" 
+                Placeholder="Key Words (separated by ,)" 
+                OnValueChanged="OnKeyWordsChanged" 
+                Value="@string.Join(", ", ModifiedJobDescription.GlobalKeyWords ?? [])" 
+            />
+            <div class="text-xl font-regular">Configured Providers</div>
+            <table class=@($"table-fixed{(ModifiedJobDescription.Providers.Count > 5 ? " h-[100px] overflow-y-scroll" : "")}")>
+                <tbody>
+                    @foreach (var provider in ModifiedJobDescription.Providers)
+                    {
+                        <tr class="border">
+                            <td class="flex flex-row items-center">
+                                <button>
+                                    <i class="fa fa-gear px-2"/>
+                                </button>
+                                <div>@provider.Name</div>
+                                <button class="ml-auto"><i class="fa fa-trash px-2" /></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="flex flex-row gap-2">
+                <ConfigurationSelect 
+                    Item="JobDescription" 
+                    ClassName="flex-grow"
+                    Placeholder="Configure Providers"
+                />
+                <button class="rounded-md bg-[#F4F4F4] border border-1 px-5">
+                    Save
+                </button>
+            </div>
+
+        </div>
+
+    </ConfigurationForm>
+}
+
+
+@code
+{
+    [Parameter]
+    public JobDescription? JobDescription { get; set; }
+
+    [Parameter]
+    public EventCallback OnRequestProviderEdit { get; set; }
+
+    private JobDescription ModifiedJobDescription { get; set; } = new();
+
+    protected override void OnParametersSet()
+    {
+        ModifiedJobDescription.Name = JobDescription!.Name;
+        ModifiedJobDescription.GlobalKeyWords = JobDescription.GlobalKeyWords;
+        ModifiedJobDescription.Providers = JobDescription.Providers;
+    }
+
+    protected string KeyWords { get; set; } = "";
+
+    protected bool IsModified { get; set; } = false;
+
+    private string? Name { get; set; }
+
+    private List<JobProvider> Providers { get; set; }
+
+    public void OnNameChange(string name)
+    {
+        ModifiedJobDescription!.Name = name;
+
+        IsModified = true;
+    }
+
+    public void OnKeyWordsChanged(string keywords)
+    {
+        KeyWords = keywords;
+        ModifiedJobDescription!.GlobalKeyWords = KeyWords.Split(",").Select(kw => kw.Trim()).ToList();
+
+        IsModified = true;
+    }
+}

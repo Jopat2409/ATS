@@ -12,8 +12,8 @@ using WebApp.Data;
 namespace WebApp.Migrations
 {
     [DbContext(typeof(WebAppContext))]
-    [Migration("20250810180759_SeedData")]
-    partial class SeedData
+    [Migration("20250811101817_SeedDatabase")]
+    partial class SeedDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -108,6 +108,14 @@ namespace WebApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("JobDescription");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            GlobalKeyWords = "[\"junior\",\"entry\",\"grad\"]",
+                            Name = "Software Engineer"
+                        });
                 });
 
             modelBuilder.Entity("WebApp.Models.JobProvider", b =>
@@ -133,6 +141,9 @@ namespace WebApp.Migrations
                     b.Property<string>("Class_NextPage")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("CloudflareBlocked")
+                        .HasColumnType("bit");
+
                     b.PrimitiveCollection<string>("KeyWords")
                         .HasColumnType("nvarchar(max)");
 
@@ -157,6 +168,7 @@ namespace WebApp.Migrations
                             Class_JobLink = "a.job-card__link",
                             Class_JobLocation = "div.job-card__location",
                             Class_JobTitle = "div.job-card > h3",
+                            CloudflareBlocked = false,
                             LastScraped = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             Name = "BAE Systems",
                             Url = "https://jobsearch.baesystems.com/search-and-apply"
@@ -168,6 +180,7 @@ namespace WebApp.Migrations
                             Class_JobLink = "a.job-card__link",
                             Class_JobLocation = "div.job-card__location",
                             Class_JobTitle = "div.job-card > h3",
+                            CloudflareBlocked = false,
                             LastScraped = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             Name = "Revolut",
                             Url = "https://www.revolut.com/careers/"
@@ -179,6 +192,7 @@ namespace WebApp.Migrations
                             Class_JobLocation = "div.jobs-location > small",
                             Class_JobTitle = "a.jobs-title > b",
                             Class_NextPage = "div.pager__item--next",
+                            CloudflareBlocked = false,
                             LastScraped = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             Name = "Nestle",
                             Url = "https://www.nestle.com/jobs/search-jobs"

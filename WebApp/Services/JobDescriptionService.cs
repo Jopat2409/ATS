@@ -18,7 +18,11 @@ namespace WebApp.Services
             foreach (var provider in description.ToScrape)
             {
                 Debug.WriteLine($"Getting jobs for provider {provider.Name} from description {provider.Descriptions.FirstOrDefault(p => p.Id == provider.Id)?.Name}");
-                provider.Jobs.AddRange(await _scraper.GetJobsFromDescription(provider, description.GlobalKeyWords == null ? [] : [.. description.GlobalKeyWords]));
+                var jobs = await _scraper.GetJobsFromDescription(provider, description.GlobalKeyWords == null ? [] : [.. description.GlobalKeyWords]);
+
+                if (jobs.Count == 0) provider.CloudflareBlocked = true;
+
+                provider.Jobs.AddRange(jobs);
                 provider.LastScraped = DateTimeOffset.Now;
             }
 

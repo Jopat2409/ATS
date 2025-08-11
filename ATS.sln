@@ -5,6 +5,8 @@ VisualStudioVersion = 17.13.35818.85
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApp", "WebApp\WebApp.csproj", "{9F446B73-1287-41FB-A1CF-EE4C3DB459BA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MauiWebView", "MauiWebView\MauiWebView.csproj", "{1BA0BCC4-6418-45C6-A493-94751D991E48}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{9F446B73-1287-41FB-A1CF-EE4C3DB459BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F446B73-1287-41FB-A1CF-EE4C3DB459BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9F446B73-1287-41FB-A1CF-EE4C3DB459BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1BA0BCC4-6418-45C6-A493-94751D991E48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BA0BCC4-6418-45C6-A493-94751D991E48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BA0BCC4-6418-45C6-A493-94751D991E48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BA0BCC4-6418-45C6-A493-94751D991E48}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
