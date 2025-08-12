@@ -34,15 +34,24 @@ namespace WebApp.Services.External
             htmlDoc.LoadHtml(html);
 
             var jobNodes = htmlDoc.DocumentNode.QuerySelectorAll(provider.Class_JobTitle);
-            var jobLocationNodes = htmlDoc.DocumentNode.QuerySelectorAll(provider.Class_JobLocation);
-            var jobDescriptionNodes = htmlDoc.DocumentNode.QuerySelectorAll(provider.Class_JobDescription);
-            var jobLinkNodes = htmlDoc.DocumentNode.QuerySelectorAll(provider.Class_JobLink);
 
-            List<int> Counts = [jobNodes.Count, jobLocationNodes.Count, jobDescriptionNodes.Count, jobLinkNodes.Count];
+            var jobLinkNodes = !string.IsNullOrEmpty(provider.Class_JobLink)
+                ? htmlDoc.DocumentNode.QuerySelectorAll(provider.Class_JobLink)
+                : null;
 
-            if (Counts.Any(c => c != Counts[0]))
+            var jobLocationNodes = !string.IsNullOrEmpty(provider.Class_JobLocation)
+                ? htmlDoc.DocumentNode.QuerySelectorAll(provider.Class_JobLocation)
+                : null;
+
+            var jobDescriptionNodes = !string.IsNullOrEmpty(provider.Class_JobDescription)
+                ? htmlDoc.DocumentNode.QuerySelectorAll(provider.Class_JobDescription)
+                : null;
+
+            List<int?> counts = [jobNodes.Count, jobLinkNodes?.Count, jobLocationNodes?.Count, jobDescriptionNodes?.Count];
+
+            if (counts.Where(c => c != null).Any(c => c != counts[0]))
             {
-                Debug.WriteLine($"Inconsistent number of scraped data {Counts[0]} {Counts[1]} {Counts[2]} {Counts[3]}");
+                Debug.WriteLine($"Inconsistent number of scraped data {counts[0]} {counts[1]} {counts[2]} {counts[3]}");
                 return [];
             }
 
@@ -52,9 +61,15 @@ namespace WebApp.Services.External
                 Jobs.Add(new Job()
                 {
                     Title = HttpUtility.HtmlDecode(jobNodes[i].InnerHtml),
-                    Location = HttpUtility.HtmlDecode(jobLocationNodes[i].InnerHtml),
-                    Description = HttpUtility.HtmlDecode(jobDescriptionNodes[i].InnerHtml),
-                    Url = HttpUtility.HtmlDecode(jobLinkNodes[i].Attributes["href"].Value),
+                    Location = jobLocationNodes != null
+                        ? HttpUtility.HtmlDecode(jobLocationNodes[i].InnerHtml)
+                        : null,
+                    Description = jobDescriptionNodes != null
+                        ? HttpUtility.HtmlDecode(jobDescriptionNodes[i].InnerHtml)
+                        : null,
+                    Url = jobLinkNodes != null
+                        ? HttpUtility.HtmlDecode(jobLinkNodes[i].Attributes["href"].Value)
+                        : null,
                     Found = DateTimeOffset.Now
                 });
             }

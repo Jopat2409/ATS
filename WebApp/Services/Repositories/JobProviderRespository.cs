@@ -9,9 +9,16 @@ namespace WebApp.Services.Repositories
     {
         private readonly IDbContextFactory<WebAppContext> _contextFactory = db;
 
-        public Task<JobProvider> CreateAsync(JobProvider t)
+        public async Task<JobProvider> CreateAsync(JobProvider t)
         {
-            throw new NotImplementedException();
+            using var context = await _contextFactory.CreateDbContextAsync();
+            await context.JobProvider.AddAsync(t);
+
+            await context.SaveChangesAsync();
+
+            // We can error here if this is null since we've not committed properly and should probably
+            // Just kill ourselves
+            return context.JobProvider.FirstOrDefault(p => p.Id == t.Id)!;
         }
 
         public Task DeleteAsync(JobProvider t)

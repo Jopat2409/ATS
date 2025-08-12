@@ -1,7 +1,10 @@
 ﻿@typeparam Item
 @implements IDisposable
 
+@using WebApp.Models;
+
 @inject WebApp.Services.DropdownService DropdownHandler
+@inject WebApp.Services.Repositories.JobProviderRespository JobProviders
 
 <flex class="flex @ClassName inline-block relative">
     <button class="flex w-full items-center justify-between rounded border border-gray-400 bg-gray-100 hover:bg-gray-200" >
@@ -15,7 +18,34 @@
     @if(IsOpen)
     {
         <div class="absolute left-0 w-full top-full z-40 bg-gray-100 rounded-md mt-2 border flex flex-col">
-            <div class="border border-gray-400 border-b-0 py-2 rounded-t-md px-2"><i class="fa fa-plus-square-o mr-2" />Add existing providers</div>
+            <button 
+            class="border border-gray-400 border-b-0 py-2 rounded-t-md px-2 flex flex-row items-center" 
+            @onclick="SetSelectingExisting"
+            >
+                <i class="fa @(SelectedFunction == "add_existing" ? "fa-minus-square-o" : "fa-plus-square-o") mr-2" />
+                Add existing providers
+            </button>
+
+
+            <div class="flex flex-col gap-5 border-gray-400 border-b-0 transition-all duration-300 ease-in-out overflow-hidden @(SelectedFunction == "add_existing" ? "max-h-[200px] p-3" : "max-h-0 p-0")">
+                <input class="bg-white/75 rounded-md border border-black w-full p-1" type="text" value="@SearchedProvider" @oninput="SetSearchedProvider" />
+                <div class="h-[200px] overflow-y-scroll w-full">
+                    <table class="table-fixed w-full">
+                        @foreach (var provider in FilteredJobProviders ?? AllJobProviders)
+                        {
+                            <tr class="border border-black bg-white">
+                                <td class="px-2 flex flex-row items-center">
+                                    <button value="@provider.Id" @onclick="() => OnAddExistingProvider(provider.Id)">
+                                        <i class="fa fa-plus pr-2"/>
+                                    </button>
+                                    @provider.Name
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+            </div>
+
             <div class="border border-gray-400 border-b-0 p-2">Add providers from other description</div>
             <div class="border border-gray-400 p-2 rounded-b-md">Add custom provider</div>
         </div>
@@ -34,13 +64,47 @@
     [Parameter]
     public string Placeholder { get; set; } = "Configure Default Providers";
 
+    [Parameter]
+    public EventCallback<int> OnProviderAdded { get; set; }
+
+    private async Task OnAddExistingProvider(int providerId)
+    {
+        await OnProviderAdded.InvokeAsync(providerId);
+    }
+
+    private string? SelectedFunction { get; set; } = null;
+
+    private string SearchedProvider = "";
+
     private string _id = "";
     private bool IsOpen => DropdownHandler.OpenId == _id;
+
+    private void SetSearchedProvider(ChangeEventArgs e)
+    {
+        SearchedProvider = e.Value?.ToString() ?? "";
+        FilteredJobProviders = SearchedProvider == "" ? null : AllJobProviders.Where(p => p.Name!.Contains(SearchedProvider, StringComparison.CurrentCultureIgnoreCase));
+    }
+
+    private List<JobProvider> AllJobProviders = new();
+
+    private IEnumerable<JobProvider>? FilteredJobProviders = null;
+
+    private void SetSelectingExisting() => SelectedFunction = SelectedFunction == "add_existing" ? null : "add_existing";
 
     protected override void OnInitialized()
     {
         _id = Guid.NewGuid().ToString();
         DropdownHandler.StateChanged += OnStateChanged;
+    }
+
+    protected void OnSearchChange(EventCallback cb)
+    {
+        
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AllJobProviders = await JobProviders.ReadAllAsync();
     }
 
 

@@ -49,16 +49,18 @@ namespace WebApp.Services.Repositories
             return await context.JobDescription.Include(j => j.Providers).ThenInclude(p => p.Jobs).FirstOrDefaultAsync(criteria);
         }
 
-        public async Task AddProviderAsync(int id, JobProvider provider)
+        public async Task AddExistingProviderAsync(int id, int providerId)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
-            await context.JobDescription
-                .Where(jd => jd.Id == id)
-                .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(p => p.Providers, p => p.Providers.Append(provider)
-                ));
+            JobDescription description = (await context.JobDescription.FirstOrDefaultAsync(jd => jd.Id == id))!;
+            JobProvider provider = (await context.JobProvider.FirstOrDefaultAsync(p => p.Id == providerId))!;
 
+            description.Providers.Add(provider);
+            context.Update(description);
+
+            await context.SaveChangesAsync();
         }
+
 
         public async Task<JobDescription> UpdateAsync(JobDescription t)
         {

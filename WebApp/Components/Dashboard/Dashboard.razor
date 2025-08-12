@@ -71,8 +71,8 @@
                                 <!-- Right section -->
                                 <div class="flex flex-col items-end gap-1">
                                     <a href="@job.Url"
-                                       target="_blank"
-                                       class="px-3 py-1 rounded-lg border border-gray-300 bg-gray-50 text-blue-600 text-sm hover:bg-gray-100">
+                                    target="_blank"
+                                    class="px-3 py-1 rounded-lg border border-gray-300 bg-gray-50 text-blue-600 text-sm hover:bg-gray-100">
                                         Apply
                                     </a>
                                     <p class="text-sm text-gray-700">@job.Location</p>
@@ -86,7 +86,7 @@
         }
 
     </div>
-    <div class="flex flex-col w-[40%] h-full bg-\[\#F7F8FA\] gap-5 p-10">
+    <div class="flex flex-col w-[40%] h-full bg-\[\#F7F8FA\] gap-5 p-10 overflow-y-scroll">
         <div class="flex flex-row items-center gap-2">
             <i class="fa fa-gears fa-2x margin-auto" aria-hidden="true"></i>
             <h1 class="text-3xl">Configure</h1>
@@ -96,6 +96,7 @@
         {
             <DescriptionEditForm JobDescription="CurrentJobDescription"/>
         }
+        <ProviderAddForm OnProviderAdded="ReloadProviders"/>
     </div>
 </div>
 
@@ -118,6 +119,12 @@
 
     private async Task ReloadDescriptions()
     {
+        JobDescriptions = await JobDescriptionRespository.ReadAllAsync();
+    }
+
+    private async Task ReloadProviders()
+    {
+        // We can just reload providers using this since providers will be read
         JobDescriptions = await JobDescriptionRespository.ReadAllAsync();
     }
 

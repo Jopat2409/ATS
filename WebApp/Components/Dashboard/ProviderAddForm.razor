@@ -1,5 +1,97 @@
-﻿<h3>ProviderAddForm</h3>
+﻿@using WebApp.Components.FormComponents
+@using WebApp.Models
+
+@inject WebApp.Services.Repositories.JobProviderRespository JobProviderRepository
+
+
+<ConfigurationForm Title="Add Company">
+    <div class="flex flex-col gap-2 rounded-md">
+        <FormTextInput 
+            Label="Name" 
+            Placeholder="Company" 
+            OnValueChanged="OnNameChange" 
+            Value="@PartialJobProvider.Name" 
+        />
+        <FormTextInput 
+            Label="Key Words" 
+            Placeholder="Key Words (separated by ,)" 
+            OnValueChanged="OnKeyWordsChanged" 
+            Value="@KeyWords"
+        />
+        <FormTextInput 
+            Label="URL" 
+            Placeholder="Job page URL" 
+            OnValueChanged="(value) => PartialJobProvider.Url = value" 
+            Value="@PartialJobProvider.Url"
+        />
+
+        <div class="text-xl font-semibold w-full border-b border-b-black/75">Class Selectors</div>
+
+        <FormTextInput 
+            Label="Name" 
+            Placeholder="Job title class selector" 
+            OnValueChanged="(value) => PartialJobProvider.Class_JobTitle = value" 
+            Value="@PartialJobProvider.Class_JobTitle"
+        />
+        <FormTextInput 
+            Label="URL" 
+            Placeholder="Job link class selector" 
+            OnValueChanged="(value) => PartialJobProvider.Class_JobLink = value" 
+            Value="@PartialJobProvider.Class_JobLink"
+        />
+        <FormTextInput 
+            Label="Location" 
+            Placeholder="Job location class selector" 
+            OnValueChanged="(value) => PartialJobProvider.Class_JobLocation = value" 
+            Value="@PartialJobProvider.Class_JobLocation"
+        />
+        <FormTextInput 
+            Label="Description" 
+            Placeholder="Job description class selector" 
+            OnValueChanged="(value) => PartialJobProvider.Class_JobDescription = value" 
+            Value="@PartialJobProvider.Class_JobDescription"
+        />
+
+        <div class="flex flex-row gap-2 mt-5">
+            <button class="rounded-md bg-[#F4F4F4] border border-1 px-5 py-1" @onclick="AddJobProvider">
+                Create
+            </button>
+        </div>
+
+    </div>
+
+</ConfigurationForm>
 
 @code {
+    protected JobProvider PartialJobProvider = new();
+
+    [Parameter]
+    public EventCallback OnProviderAdded { get; set; }
+
+    protected string KeyWords { get; set; } = "";
+
+    public async Task AddJobProvider()
+    {
+
+        if (string.IsNullOrEmpty(PartialJobProvider.Name)) return;
+
+        await JobProviderRepository.CreateAsync(PartialJobProvider);
+        PartialJobProvider = new();
+
+        await OnProviderAdded.InvokeAsync();
+
+        KeyWords = "";
+    }
+
+    public void OnNameChange(string name)
+    {
+        PartialJobProvider.Name = name;
+    }
+
+    public void OnKeyWordsChanged(string keywords)
+    {
+        KeyWords = keywords;
+        PartialJobProvider.KeyWords = KeyWords.Split(",").Select(kw => kw.Trim()).ToList();
+    }
 
 }
