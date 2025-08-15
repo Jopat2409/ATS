@@ -18,6 +18,7 @@ builder.Services.AddScoped<JobRepository>();
 builder.Services.AddScoped<JobService>();
 
 builder.Services.AddSingleton<DropdownService>();
+builder.Services.AddSingleton<JobBoardStateService>();
 
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 

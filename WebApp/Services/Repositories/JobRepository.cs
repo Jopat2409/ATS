@@ -206,7 +206,7 @@ namespace WebApp.Services.Repositories
                 : [.. job.Sources.SelectMany(s => s.Listings)];
         }
 
-        public async Task<Job?> UpdateDetailsAsync(Job updated)
+        public async Task<Job?> UpdateAsync(Job updated)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
             Job? job = await context.Job

@@ -6,61 +6,64 @@
 
 
 <ConfigurationForm 
-    Title=@($"Edit {EditingJob.Name}") 
+    Title=@($"Edit {(EditingJob != null ?  EditingJob.Name : "INVALID JOB")}") 
     Modified=@IsModified
 >
-    <EditForm Model="@EditingJob" OnValidSubmit="@UpdateJob" class="flex flex-col gap-2 rounded-md">
+    @if (EditingJob != null)
+    {
+        <EditForm Model="@EditingJob" OnValidSubmit="@UpdateJob" class="flex flex-col gap-2 rounded-md">
 
-        <FormTextInput 
-            Label="Name" 
-            Placeholder="Job Description"
-            OnInput="OnNameChange" 
-            Value="@EditingJob.Name"
-        />
-
-        <FormTextInput 
-            Label="Key Words" 
-            Placeholder="Key Words (separated by ,)" 
-            OnInput="OnKeyWordsChanged" 
-            Value="@string.Join(", ", EditingJob.KeyWords)" 
-        />
-
-        <FormTextInput Label="Desired Locations"
-            Placeholder="Cities (separated by ,)"
-            OnInput="OnLocationsChanged"
-            Value="@string.Join(", ", EditingJob.Locations)" 
-        />
-
-        <div class="text-xl font-regular">Configured Providers</div>
-        <table class=@($"table-fixed{(EditingJob.Sources.Count > 5 ? " h-[100px] overflow-y-scroll" : "")}")>
-            <tbody>
-                @foreach (var provider in EditingJob.Sources)
-                {
-                    <tr class="border">
-                        <td class="flex flex-row items-center">
-                            <button>
-                                <i class="fa fa-gear px-2"/>
-                            </button>
-                            <div>@provider.Name</div>
-                            <button class="ml-auto" type="button" @onclick="() => OnRemoveExistingProvider(provider.Id)"><i class="fa fa-trash px-2" /></button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-        <div class="flex flex-row gap-2">
-            <ConfigurationSelect 
-                SourceOwner="EditingJob" 
-                ClassName="flex-grow"
-                Placeholder="Configure Providers"
-                OnProvidersUpdated="OnJobUpdate"
+            <FormTextInput 
+                Label="Name" 
+                Placeholder="Job Description"
+                OnInput="OnNameChange" 
+                Value="@EditingJob.Name"
             />
-            <button class="rounded-md bg-[#F4F4F4] border border-1 px-5" type="submit">
-                Save
-            </button>
-        </div>
 
-    </EditForm>
+            <FormTextInput 
+                Label="Key Words" 
+                Placeholder="Key Words (separated by ,)" 
+                OnInput="OnKeyWordsChanged" 
+                Value="@string.Join(", ", EditingJob.KeyWords)" 
+            />
+
+            <FormTextInput Label="Desired Locations"
+                Placeholder="Cities (separated by ,)"
+                OnInput="OnLocationsChanged"
+                Value="@string.Join(", ", EditingJob.Locations)" 
+            />
+
+            <div class="text-xl font-regular">Configured Providers</div>
+            <table class=@($"table-fixed{(EditingJob.Sources.Count > 5 ? " h-[100px] overflow-y-scroll" : "")}")>
+                <tbody>
+                    @foreach (var provider in EditingJob.Sources)
+                    {
+                        <tr class="border">
+                            <td class="flex flex-row items-center">
+                                <button>
+                                    <i class="fa fa-gear px-2"/>
+                                </button>
+                                <div>@provider.Name</div>
+                                <button class="ml-auto" type="button" @onclick="() => OnRemoveExistingProvider(provider.Id)"><i class="fa fa-trash px-2" /></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="flex flex-row gap-2">
+                <ConfigurationSelect 
+                    SourceOwner="EditingJob" 
+                    ClassName="flex-grow"
+                    Placeholder="Configure Providers"
+                    OnProvidersUpdated="UpdateEditingJob"
+                />
+                <button class="rounded-md bg-[#F4F4F4] border border-1 px-5" type="submit">
+                    Save
+                </button>
+            </div>
+
+        </EditForm>
+    }
 
 </ConfigurationForm>
 
@@ -69,7 +72,7 @@
 @code
 {
     [Parameter]
-    public required Job EditingJob { get; set; }
+    public required int JobId { get; set; }
 
     [Parameter]
     public EventCallback OnJobUpdate { get; set; }
@@ -77,23 +80,50 @@
     [Parameter]
     public EventCallback OnJobEdit { get; set; }
 
+    private Job? EditingJob;
+    protected bool IsModified { get; set; } = false;
+
     protected async Task OnAddExistingProvider(int provider)
     {
         await JobRepository.AddExistingSourceAsync(EditingJob!.Id, provider);
+
+        await UpdateEditingJob();
+
         await OnJobUpdate.InvokeAsync();
     }
 
     protected async Task OnRemoveExistingProvider(int provider)
     {
         await JobRepository.RemoveExistingSourceAsync(EditingJob!.Id, provider);
+
+        await UpdateEditingJob();
+
         await OnJobUpdate.InvokeAsync();
     }
 
-    protected bool IsModified { get; set; } = false;
+    protected async Task UpdateEditingJob()
+    {
+        EditingJob = await JobRepository.ReadOneAsync(JobId, Services.Repositories.JobRepository.Include.SOURCES);
+    }
+
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        Logger.LogInformation("This is getting called");
+        parameters.SetParameterProperties(this);
+
+        // Do something when JobId changes
+        if (EditingJob == null || EditingJob.Id != JobId)
+        {
+            EditingJob = await JobRepository.ReadOneAsync(JobId, Services.Repositories.JobRepository.Include.SOURCES);
+            Logger.LogInformation(EditingJob!.Name);
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
 
     public void OnNameChange(string name)
     {
-        Logger.LogInformation("Changing name from \"{}\" to \"{}\"", EditingJob.Name, name);
+        Logger.LogInformation("Changing name from \"{}\" to \"{}\"", EditingJob!.Name, name);
         EditingJob.Name = name;
         IsModified = true;
 
@@ -102,7 +132,7 @@
 
     public void OnKeyWordsChanged(string keywords)
     {
-        EditingJob.KeyWords = keywords.Split(",").Select(kw => kw.Trim()).ToList();
+        EditingJob!.KeyWords = keywords.Split(",").Select(kw => kw.Trim()).ToList();
         IsModified = true;
 
         OnJobEdit.InvokeAsync();
@@ -110,7 +140,7 @@
 
     public void OnLocationsChanged(string locations)
     {
-        EditingJob.Locations = locations.Split(",").Select(j => j.Trim()).ToList();
+        EditingJob!.Locations = locations.Split(",").Select(j => j.Trim()).ToList();
         IsModified = true;
 
         OnJobEdit.InvokeAsync();
@@ -118,7 +148,7 @@
 
     public async Task UpdateJob()
     {
-        await JobRepository.UpdateDetailsAsync(EditingJob);
+        await JobRepository.UpdateAsync(EditingJob!);
         await OnJobUpdate.InvokeAsync();
 
         IsModified = false;
