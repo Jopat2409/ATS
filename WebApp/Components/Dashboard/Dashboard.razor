@@ -1,14 +1,15 @@
-﻿@using WebApp.Components.FormComponents
+﻿@page "/Dashboard"
+@using WebApp.Components.FormComponents
 @using System.Diagnostics
 @using WebApp.Models;
 
 
 
-@page "/Dashboard"
 @rendermode InteractiveServer
 
-@inject WebApp.Services.JobDescriptionService JDService
-@inject WebApp.Services.Repositories.JobDescriptionRespository JobDescriptionRespository
+@inject WebApp.Services.JobService JobService
+@inject WebApp.Services.Repositories.JobRepository JobRepository
+
 
 <div class="w-[100vw] h-[100vh] bg-[#F3F4F5] flex flex-row">
     <div class="flex flex-col w-[30%] h-full bg-[#F6F8FA] p-10">
@@ -16,17 +17,17 @@
             <h1 class="text-3xl">Job Descriptions</h1>
             <i class="fa fa-gear p-1 border border-1 rounded-sm"></i>
         </div>
-        @foreach (JobDescription description in JobDescriptions)
+        @foreach (Job job in Jobs)
         {
-            var newJobs = description.NewJobs.Count();
-            <div class="flex items-center bg-white rounded-md py-4 pr-4 mb-3 shadow relative hover:cursor-pointer hover:shadow-4" @onclick="() => CurrentJobDescription = description">
+            var newJobs = job.NewListings.Count();
+            <div class="flex items-center bg-white rounded-md py-4 pr-4 mb-3 shadow relative hover:cursor-pointer hover:shadow-4" @onclick="() => CurrentJob = job">
                 @if (newJobs > 0)
                 {
                     <div class="w-1 h-[75%] bg-blue-600 rounded-r-md my-auto"></div>
 
                 }
                 <div class="ml-4">
-                    <div class="font-semibold text-gray-900">@description.Name</div>
+                    <div class="font-semibold text-gray-900">@job.Name</div>
                     <div class="text-sm text-gray-500">@newJobs new jobs</div>
                 </div>
             </div>
@@ -37,48 +38,46 @@
         </a>
     </div>
     <div class="flex flex-col w-[30%] h-full bg-white p-10 gap-[20px]">
-        @if(JobDescriptions.Count == 0)
+        @if(Jobs.Count == 0)
         {
             <h1>Add a job description and begin adding providers</h1>
-        } else if (CurrentJobDescription == null)
+        } else if (CurrentJob == null)
         {
             <h1>Select a job Description</h1>
         } else
         {
 
-            <h1 class="text-3xl">@CurrentJobDescription.Name</h1>
+            <h1 class="text-3xl">@CurrentJob.Name</h1>
 
-            @if (CurrentJobDescription.Providers.Count == 0)
+            @if (CurrentJob.Sources.Count == 0)
             {
                 <h1>Add job providers to start browsing jobs</h1>
             } else
             {
 
-                <h3 class="text-md">Last updated @TimeAgo(CurrentJobDescription.Providers.Select(p => p.LastScraped).Max())</h3>
+                <h3 class="text-md">Last updated @TimeAgo(CurrentJob.Sources.Select(p => p.LastScraped).Max())</h3>
                 <input class="h-[5%] rounded-md bg-[#FFFFFE] border p-5" type="text" @bind-value="jobSearch" @bind-value:event="oninput" />
                 <div class="w-full flex flex-col overflow-y-scroll flex-grow gap-[20px]">
-                    @foreach (JobProvider provider in CurrentJobDescription.Providers)
-                    {
-                        @foreach (Job job in FilteredJobs)
-                        {
-                            <div class="flex justify-between items-center border rounded-lg p-4 h-[15%]">
-                                <!-- Left section -->
-                                <div class="h-full flex flex-col items-around">
-                                    <h2 class="font-semibold text-xl">@job.Title</h2>
-                                    <p class="text-sm text-gray-700">@provider.Name</p>
-                                </div>
 
-                                <!-- Right section -->
-                                <div class="flex flex-col items-end gap-1">
-                                    <a href="@job.Url"
-                                    target="_blank"
-                                    class="px-3 py-1 rounded-lg border border-gray-300 bg-gray-50 text-blue-600 text-sm hover:bg-gray-100">
-                                        Apply
-                                    </a>
-                                    <p class="text-sm text-gray-700">@job.Location</p>
-                                </div>
+                    @foreach (JobListing job in CurrentJob.AllListings)
+                    {
+                        <div class="flex justify-between items-center border rounded-lg p-4 h-[15%]">
+                            <!-- Left section -->
+                            <div class="h-full flex flex-col items-around">
+                                <h2 class="font-semibold text-xl">@job.Title</h2>
+                                <p class="text-sm text-gray-700">@(job.Source?.Name ?? "Unknown")</p>
                             </div>
-                        }
+
+                            <!-- Right section -->
+                            <div class="flex flex-col items-end gap-1">
+                                <a href="@job.Url"
+                                target="_blank"
+                                class="px-3 py-1 rounded-lg border border-gray-300 bg-gray-50 text-blue-600 text-sm hover:bg-gray-100">
+                                    Apply
+                                </a>
+                                <p class="text-sm text-gray-700">@job.Location</p>
+                            </div>
+                        </div>
                     }
                 </div>
             }
@@ -91,12 +90,12 @@
             <i class="fa fa-gears fa-2x margin-auto" aria-hidden="true"></i>
             <h1 class="text-3xl">Configure</h1>
         </div>
-        <DescriptionAddForm OnDescriptionAdded="ReloadDescriptions"/>
-        @if (CurrentJobDescription != null)
+        <JobAddForm OnFormSubmit="ReloadJobs"/>
+        @if (CurrentJob != null)
         {
-            <DescriptionEditForm JobDescription="CurrentJobDescription"/>
+            <JobEditForm EditingJob="CurrentJob" OnJobUpdate="ReloadCurrentJob" />
         }
-        <ProviderAddForm OnProviderAdded="ReloadProviders"/>
+        <ProviderAddForm OnProviderAdded="ReloadSources"/>
     </div>
 </div>
 
@@ -117,38 +116,35 @@
             return "just now";
     }
 
-    private async Task ReloadDescriptions()
+    private async Task ReloadJobs()
     {
-        JobDescriptions = await JobDescriptionRespository.ReadAllAsync();
+        Jobs = await JobRepository.ReadAllAsync(Services.Repositories.JobRepository.Include.LISTINGS);
+        CurrentJob = CurrentJob == null ? Jobs.FirstOrDefault() : Jobs.FirstOrDefault(j => j.Id == CurrentJob!.Id);
     }
 
-    private async Task ReloadProviders()
+    private async Task ReloadCurrentJob()
     {
-        // We can just reload providers using this since providers will be read
-        JobDescriptions = await JobDescriptionRespository.ReadAllAsync();
+        CurrentJob = await JobRepository.ReadOneAsync(CurrentJob!.Id, Services.Repositories.JobRepository.Include.LISTINGS);
+    }
+
+    private async Task ReloadSources()
+    {
+        // We can just reload sources using this since providers will be read
+        Jobs = await JobRepository.ReadAllAsync(Services.Repositories.JobRepository.Include.LISTINGS);
     }
 
     public string jobSearch { get; set; } = "";
 
+    private Job? CurrentJob;
+
     public List<Job> Jobs { get; set; } = new List<Job>();
 
-    private List<Job> FilteredJobs =>
-        Jobs.Where(item => string.IsNullOrEmpty(jobSearch) || item.Title!.Contains(jobSearch, StringComparison.CurrentCultureIgnoreCase)).ToList();
+    public List<JobListing> JobListings { get; set; } = new List<JobListing>();
 
-    List<JobDescription> JobDescriptions = new List<JobDescription>();
-
-    JobDescription? CurrentJobDescription;
 
     protected override async Task OnInitializedAsync()
     {
-        JobDescriptions = await JobDescriptionRespository.ReadAllAsync();
-        foreach (var jd in JobDescriptions)
-        {
-            Jobs.AddRange(await JDService.GetJobs(jd));
-        }
-
-        CurrentJobDescription = JobDescriptions.FirstOrDefault();
+        Jobs = await JobRepository.ReadAllAsync(Services.Repositories.JobRepository.Include.LISTINGS);
+        CurrentJob = Jobs.FirstOrDefault();
     }
-
-    //List<JobDescription> JobDescriptions = await JobDescriptionRespository.ReadAllAsync();
 }

@@ -11,13 +11,13 @@ builder.Services.AddDbContextFactory<WebAppContext>(options =>
 
 builder.Services.AddHttpClient<WebScraper>();
 
+builder.Services.AddScoped<JobListingRepository>();
+builder.Services.AddScoped<JobSourceRepository>();
 builder.Services.AddScoped<JobRepository>();
-builder.Services.AddScoped<JobProviderRespository>();
-builder.Services.AddScoped<JobDescriptionRespository>();
 
-builder.Services.AddScoped<JobDescriptionService>();
+builder.Services.AddScoped<JobService>();
 
-builder.Services.AddScoped<DropdownService>();
+builder.Services.AddSingleton<DropdownService>();
 
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 
@@ -39,7 +39,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 
 app.UseAntiforgery();
 

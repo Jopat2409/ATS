@@ -1,7 +1,13 @@
 ﻿
 <div class="w-full flex flex-row gap-5 items-center">
     <div class="text-xl font-regular">@($"{@Label}:")</div>
-    <input placeholder="@Placeholder" class="w-2/3 p-1 rounded-md border border-black/50 border-1 ml-auto" @onchange="OnInputChanged" value="@Value"/>
+    <input 
+        placeholder="@Placeholder" 
+        class="w-2/3 p-1 rounded-md border border-black/50 border-1 ml-auto" 
+        @oninput="DoInput" 
+        @onchange="DoValueChanged" 
+        value="@Value" 
+    />
 </div>
 
 @code
@@ -9,10 +15,12 @@
     [Parameter]
     public EventCallback<string> OnValueChanged { get; set; }
 
-    private async Task OnInputChanged(ChangeEventArgs e)
-    {
-        await OnValueChanged.InvokeAsync(e.Value?.ToString());
-    }
+    [Parameter]
+    public EventCallback<string> OnInput { get; set; }
+
+    private async Task DoInput(ChangeEventArgs e) => await OnInput.InvokeAsync(e.Value?.ToString());
+    private async Task DoValueChanged(ChangeEventArgs e) => await OnValueChanged.InvokeAsync(e.Value?.ToString());
+
 
     [Parameter]
     public string? Placeholder { get; set; }

@@ -1,13 +1,14 @@
-﻿@typeparam Item
-@implements IDisposable
+﻿@implements IDisposable
 
 @using WebApp.Models;
 
+@inject ILogger<ConfigurationSelect> Logger;
 @inject WebApp.Services.DropdownService DropdownHandler
-@inject WebApp.Services.Repositories.JobProviderRespository JobProviders
+@inject WebApp.Services.Repositories.JobRepository JobRepo
+@inject WebApp.Services.Repositories.JobSourceRepository JobSourceRepo
 
 <flex class="flex @ClassName inline-block relative">
-    <button class="flex w-full items-center justify-between rounded border border-gray-400 bg-gray-100 hover:bg-gray-200" >
+    <button class="flex w-full items-center justify-between rounded border border-gray-400 bg-gray-100 hover:bg-gray-200" type="button">
         <span class="px-4 h-full py-1">@Placeholder</span>
         <span class="flex items-center gap-1 px-3 border-l border-gray-400 bg-gray-200 hover:bg-gray-100 h-full py-1" @onclick="() => DropdownHandler.Toggle(_id)">
             <i class="fa fa-gear"></i>
@@ -19,26 +20,58 @@
     {
         <div class="absolute left-0 w-full top-full z-40 bg-gray-100 rounded-md mt-2 border flex flex-col">
             <button 
-            class="border border-gray-400 border-b-0 py-2 rounded-t-md px-2 flex flex-row items-center" 
-            @onclick="SetSelectingExisting"
+                class="border border-gray-400 border-b-0 py-2 rounded-t-md px-2 flex flex-row items-center" 
+                @onclick="() => SetFunction(FunctionType.ADD_EXISTING)"
+                type="button"
             >
-                <i class="fa @(SelectedFunction == "add_existing" ? "fa-minus-square-o" : "fa-plus-square-o") mr-2" />
-                Add existing providers
+                <i class="fa @SelectionIcon(FunctionType.ADD_EXISTING) mr-2" />
+                Add existing sources
             </button>
 
 
-            <div class="flex flex-col gap-5 border-gray-400 border-b-0 transition-all duration-300 ease-in-out overflow-hidden @(SelectedFunction == "add_existing" ? "max-h-[200px] p-3" : "max-h-0 p-0")">
+            <div class="flex flex-col gap-5 border-gray-400 border-b-0 transition-all duration-300 ease-in-out overflow-hidden @(SelectedFunction == FunctionType.ADD_EXISTING ? "max-h-[200px] p-3" : "max-h-0 p-0")">
                 <input class="bg-white/75 rounded-md border border-black w-full p-1" type="text" value="@SearchedProvider" @oninput="SetSearchedProvider" />
                 <div class="h-[200px] overflow-y-scroll w-full">
                     <table class="table-fixed w-full">
-                        @foreach (var provider in FilteredJobProviders ?? AllJobProviders)
+                        @foreach (var provider in AllJobProviders.Where(p => p.Name.Contains(SearchedProvider, StringComparison.CurrentCultureIgnoreCase)))
+                        {
+                            var selected = SourceOwner.Sources.Any(s => s.Id == provider.Id);
+                            @if(!selected)
+                            {
+                                <tr class="border border-black bg-white">
+                                    <td class="px-2 flex flex-row items-center">
+                                        <button type="button" value="@provider.Id" @onclick="() => AddExistingProvider(provider.Id)"
+                                        >
+                                            <i class="fa fa-plus pr-2"/>
+                                        </button>
+                                        @provider.Name
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </table>
+                </div>
+            </div>
+
+            <button class="border border-gray-400 border-b-0 py-2 px-2 flex flex-row items-center"
+                    @onclick="() => SetFunction(FunctionType.ADD_GROUP)"
+                    type="button">
+                <i class="fa @SelectionIcon(FunctionType.ADD_GROUP) mr-2" />
+                Add sources from other job
+            </button>
+
+            <div class="flex flex-col gap-5 border-gray-400 border-b-0 transition-all duration-300 ease-in-out overflow-hidden @(SelectedFunction == FunctionType.ADD_GROUP ? "max-h-[200px] p-3" : "max-h-0 p-0")">
+                <input class="bg-white/75 rounded-md border border-black w-full p-1" type="text" value="@SearchedJob" @oninput="SetSearchedJob" />
+                <div class="h-[200px] overflow-y-scroll w-full">
+                    <table class="table-fixed w-full">
+                        @foreach (var job in AllJobs.Where(p => p.Name.Contains(SearchedJob, StringComparison.CurrentCultureIgnoreCase)))
                         {
                             <tr class="border border-black bg-white">
                                 <td class="px-2 flex flex-row items-center">
-                                    <button value="@provider.Id" @onclick="() => OnAddExistingProvider(provider.Id)">
-                                        <i class="fa fa-plus pr-2"/>
+                                    <button type="button" value="@job.Id" @onclick="() => AddProvidersFromJob(job.Id)">
+                                        <i class="fa fa-plus pr-2" />
                                     </button>
-                                    @provider.Name
+                                    @job.Name
                                 </td>
                             </tr>
                         }
@@ -46,8 +79,36 @@
                 </div>
             </div>
 
-            <div class="border border-gray-400 border-b-0 p-2">Add providers from other description</div>
-            <div class="border border-gray-400 p-2 rounded-b-md">Add custom provider</div>
+            <button class="border border-gray-400 border-b-0 py-2 rounded-b-md px-2 flex flex-row items-center"
+                    @onclick="() => SetFunction(FunctionType.CREATE_NEW)"
+                    type="button">
+                <i class="fa @SelectionIcon(FunctionType.CREATE_NEW) mr-2" />
+                Add custom source
+            </button>
+
+            <div class="flex flex-col gap-5 border-gray-400 border-b-0 transition-all duration-300 ease-in-out overflow-hidden @(SelectedFunction == FunctionType.CREATE_NEW ? "max-h-[200px] p-3" : "max-h-0 p-0")">
+                <input class="bg-white/75 rounded-md border border-black w-full p-1" type="text" value="@SearchedProvider" @oninput="SetSearchedProvider" />
+                <div class="h-[200px] overflow-y-scroll w-full">
+                    <table class="table-fixed w-full">
+                        @foreach (var provider in AllJobProviders.Where(p => p.Name.Contains(SearchedProvider, StringComparison.CurrentCultureIgnoreCase)))
+                        {
+                            var selected = SourceOwner.Sources.Any(s => s.Id == provider.Id);
+                            @if (!selected)
+                            {
+                                <tr class="border border-black bg-white">
+                                    <td class="px-2 flex flex-row items-center">
+                                        <button type="button" value="@provider.Id" @onclick="() => AddExistingProvider(provider.Id)">
+                                            <i class="fa fa-plus pr-2" />
+                                        </button>
+                                        @provider.Name
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </table>
+                </div>
+            </div>
+
         </div>
     }
 
@@ -55,60 +116,129 @@
 
 @code
 {
-    [Parameter]
-    public List<Item> items { get; set; } = new();
+    private enum FunctionType
+    {
+        NONE,
+        ADD_EXISTING,
+        ADD_GROUP,
+        CREATE_NEW
+    };
 
     [Parameter]
-    public string ClassName { get; set; } = "";
+    public required Job SourceOwner { get; set; }
+
+    [Parameter]
+    public string ClassName { get; set; } = string.Empty;
 
     [Parameter]
     public string Placeholder { get; set; } = "Configure Default Providers";
 
     [Parameter]
-    public EventCallback<int> OnProviderAdded { get; set; }
+    public EventCallback OnProvidersUpdated { get; set; }
 
-    private async Task OnAddExistingProvider(int providerId)
+    [Parameter]
+    public bool UpdateOnProviderChange { get; set; } = true;
+
+    private string? SearchedProvider;
+    private string? SearchedJob;
+
+    private FunctionType? SelectedFunction { get; set; }
+
+    private string _id = string.Empty;
+    private bool IsOpen => DropdownHandler.OpenId == _id;
+
+    private List<JobSource> AllJobProviders = new();
+
+    private List<Job> AllJobs = new();
+
+    private async Task AddExistingProvider(int providerId)
     {
-        await OnProviderAdded.InvokeAsync(providerId);
+        if (UpdateOnProviderChange) {
+            await JobRepo.AddExistingSourceAsync(SourceOwner.Id, providerId);
+            await OnProvidersUpdated.InvokeAsync();
+        } else {
+            JobSource? source = await JobSourceRepo.ReadOneAsync(providerId);
+
+            if (source == null)
+            {
+                Logger.LogError("Attempting to add source {} that does not exist!", providerId);
+                return;
+            }
+
+            SourceOwner.Sources.Add(source);
+        }
     }
 
-    private string? SelectedFunction { get; set; } = null;
+    private async Task AddProvidersFromJob(int jobId)
+    {
+        if (UpdateOnProviderChange)
+        {
+            await JobRepo.CopySourcesAsync(jobId, SourceOwner.Id);
+            await OnProvidersUpdated.InvokeAsync();
+        } else
+        {
+            Job? from = await JobRepo.ReadOneAsync(jobId, Services.Repositories.JobRepository.Include.SOURCES);
 
-    private string SearchedProvider = "";
+            if (from == null)
+            {
+                Logger.LogError("Attempting to copy sources from job {} which does not exist!", jobId);
+                return;
+            }
 
-    private string _id = "";
-    private bool IsOpen => DropdownHandler.OpenId == _id;
+            foreach (var source in from.Sources)
+            {
+                if (SourceOwner.Sources.Any(s => s.Id == source.Id))
+                    continue;
+
+                Logger.LogInformation("Copying source {} from {} to {}", source.Name, from.Name, SourceOwner.Name);
+                SourceOwner.Sources.Add(source);
+            }
+        }
+    }
 
     private void SetSearchedProvider(ChangeEventArgs e)
     {
-        SearchedProvider = e.Value?.ToString() ?? "";
-        FilteredJobProviders = SearchedProvider == "" ? null : AllJobProviders.Where(p => p.Name!.Contains(SearchedProvider, StringComparison.CurrentCultureIgnoreCase));
+        SearchedProvider = e.Value?.ToString() ?? string.Empty;
     }
 
-    private List<JobProvider> AllJobProviders = new();
-
-    private IEnumerable<JobProvider>? FilteredJobProviders = null;
-
-    private void SetSelectingExisting() => SelectedFunction = SelectedFunction == "add_existing" ? null : "add_existing";
-
-    protected override void OnInitialized()
+    private void SetSearchedJob(ChangeEventArgs e)
     {
-        _id = Guid.NewGuid().ToString();
-        DropdownHandler.StateChanged += OnStateChanged;
+        SearchedJob = e.Value?.ToString() ?? string.Empty;
     }
+
+    private void SetFunction(FunctionType type) => SelectedFunction = SelectedFunction == type
+        ? FunctionType.NONE
+        : type;
+
+    private string SelectionIcon(FunctionType type) => SelectedFunction == type ? "fa-minus-square-o" : "fa-plus-square-o";
 
     protected void OnSearchChange(EventCallback cb)
     {
-        
+
+    }
+
+    protected override void OnParametersSet()
+    {
+        _id = SourceOwner.Name;
+
+        SearchedProvider = SearchedProvider ?? "";
+        SearchedJob = SearchedJob ?? "";
+        SelectedFunction = SelectedFunction ?? FunctionType.NONE;
+
     }
 
     protected override async Task OnInitializedAsync()
     {
-        AllJobProviders = await JobProviders.ReadAllAsync();
+        DropdownHandler.StateChanged += OnStateChanged;
+        AllJobProviders = await JobSourceRepo.ReadAllAsync();
+        AllJobs = await JobRepo.ReadAllAsync(Services.Repositories.JobRepository.Include.NONE);
     }
 
 
-    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+    private void OnStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
 
     public void Dispose()
     {

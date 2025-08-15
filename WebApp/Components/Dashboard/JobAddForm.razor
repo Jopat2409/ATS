@@ -1,0 +1,78 @@
+﻿@using WebApp.Components.FormComponents
+@using WebApp.Models
+
+@inject WebApp.Services.Repositories.JobRepository JobRepository
+@inject ILogger<JobAddForm> Logger
+
+
+<ConfigurationForm Title="Add Job Descriptions">
+        <EditForm Model="@PartialJob" OnValidSubmit="@AddJobDescription" class="flex flex-col gap-2 rounded-md">
+
+            <DataAnnotationsValidator />
+
+            <ValidationMessage For="@(() => PartialJob.Name)" />
+
+            <FormTextInput 
+                Label="Name" 
+                Placeholder="Job Description"
+                OnValueChanged="OnNameChange" 
+                Value="@PartialJob.Name"/>
+
+
+            <FormTextInput 
+                Label="Key Words" 
+                Placeholder="Key Words (separated by ,)" 
+                OnValueChanged="OnKeyWordsChanged" 
+                Value="@string.Join(", ", PartialJob.KeyWords)"/>
+
+            <FormTextInput Label="Desired Locations"
+                Placeholder="Cities (separated by ,)"
+                OnValueChanged="OnLocationsChanged"
+                Value="@string.Join(", ", PartialJob.Locations)" />
+
+            <div class="flex flex-row gap-2 mt-5">
+                <ConfigurationSelect SourceOwner="PartialJob" ClassName="flex-grow" UpdateOnProviderChange=false />
+                <button class="rounded-md bg-[#F4F4F4] border border-1 px-5 py-1" type="submit">
+                    Create
+                </button>
+            </div>
+        </EditForm>
+
+</ConfigurationForm>
+
+@code {
+    protected Job PartialJob = Job.Empty;
+
+    [Parameter]
+    public EventCallback OnFormSubmit { get; set; }
+
+    public async Task AddJobDescription()
+    {
+
+        if (string.IsNullOrEmpty(PartialJob.Name))
+        {
+            Logger.LogWarning("Attempting to create new job with no name! Silly billy. Also you bypassed EF checks! You might be a wizard!");
+            return;
+        }
+
+        await JobRepository.CreateAsync(PartialJob);
+        PartialJob = Job.Empty;
+
+        await OnFormSubmit.InvokeAsync();
+    }
+
+    public void OnNameChange(string name)
+    {
+        PartialJob.Name = name;
+    }
+
+    public void OnKeyWordsChanged(string keywords)
+    {
+        PartialJob.KeyWords = keywords.Split(",").Select(kw => kw.Trim()).ToList();
+    }
+
+    public void OnLocationsChanged(string locations)
+    {
+        PartialJob.Locations = locations.Split(",").Select(l => l.Trim()).ToList();
+    }
+}

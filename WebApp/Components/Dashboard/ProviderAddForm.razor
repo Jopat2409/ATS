@@ -1,7 +1,7 @@
 ﻿@using WebApp.Components.FormComponents
 @using WebApp.Models
 
-@inject WebApp.Services.Repositories.JobProviderRespository JobProviderRepository
+@inject WebApp.Services.Repositories.JobSourceRepository JobProviderRepository
 
 
 <ConfigurationForm Title="Add Company">
@@ -10,7 +10,7 @@
             Label="Name" 
             Placeholder="Company" 
             OnValueChanged="OnNameChange" 
-            Value="@PartialJobProvider.Name" 
+            Value="@PartialJobSource.Name" 
         />
         <FormTextInput 
             Label="Key Words" 
@@ -21,8 +21,8 @@
         <FormTextInput 
             Label="URL" 
             Placeholder="Job page URL" 
-            OnValueChanged="(value) => PartialJobProvider.Url = value" 
-            Value="@PartialJobProvider.Url"
+            OnValueChanged="(value) => PartialJobSource.Url = value" 
+            Value="@PartialJobSource.Url"
         />
 
         <div class="text-xl font-semibold w-full border-b border-b-black/75">Class Selectors</div>
@@ -30,26 +30,26 @@
         <FormTextInput 
             Label="Name" 
             Placeholder="Job title class selector" 
-            OnValueChanged="(value) => PartialJobProvider.Class_JobTitle = value" 
-            Value="@PartialJobProvider.Class_JobTitle"
+            OnValueChanged="(value) => PartialJobSource.Selector_JobTitle = value" 
+            Value="@PartialJobSource.Selector_JobTitle"
         />
         <FormTextInput 
             Label="URL" 
             Placeholder="Job link class selector" 
-            OnValueChanged="(value) => PartialJobProvider.Class_JobLink = value" 
-            Value="@PartialJobProvider.Class_JobLink"
+            OnValueChanged="(value) => PartialJobSource.Selector_JobLink = value" 
+            Value="@PartialJobSource.Selector_JobLink"
         />
         <FormTextInput 
             Label="Location" 
             Placeholder="Job location class selector" 
-            OnValueChanged="(value) => PartialJobProvider.Class_JobLocation = value" 
-            Value="@PartialJobProvider.Class_JobLocation"
+            OnValueChanged="(value) => PartialJobSource.Selector_JobLocation = value" 
+            Value="@PartialJobSource.Selector_JobLocation"
         />
         <FormTextInput 
             Label="Description" 
             Placeholder="Job description class selector" 
-            OnValueChanged="(value) => PartialJobProvider.Class_JobDescription = value" 
-            Value="@PartialJobProvider.Class_JobDescription"
+            OnValueChanged="(value) => PartialJobSource.Selector_JobDescription = value" 
+            Value="@PartialJobSource.Selector_JobDescription"
         />
 
         <div class="flex flex-row gap-2 mt-5">
@@ -63,7 +63,7 @@
 </ConfigurationForm>
 
 @code {
-    protected JobProvider PartialJobProvider = new();
+    protected JobSource PartialJobSource = JobSource.Empty;
 
     [Parameter]
     public EventCallback OnProviderAdded { get; set; }
@@ -73,10 +73,11 @@
     public async Task AddJobProvider()
     {
 
-        if (string.IsNullOrEmpty(PartialJobProvider.Name)) return;
+        if (string.IsNullOrEmpty(PartialJobSource.Name)) return;
 
-        await JobProviderRepository.CreateAsync(PartialJobProvider);
-        PartialJobProvider = new();
+        await JobProviderRepository.CreateAsync(PartialJobSource);
+
+        PartialJobSource = JobSource.Empty;
 
         await OnProviderAdded.InvokeAsync();
 
@@ -85,13 +86,13 @@
 
     public void OnNameChange(string name)
     {
-        PartialJobProvider.Name = name;
+        PartialJobSource.Name = name;
     }
 
     public void OnKeyWordsChanged(string keywords)
     {
         KeyWords = keywords;
-        PartialJobProvider.KeyWords = KeyWords.Split(",").Select(kw => kw.Trim()).ToList();
+        PartialJobSource.KeyWords = KeyWords.Split(",").Select(kw => kw.Trim()).ToList();
     }
 
 }

@@ -1,8 +1,8 @@
 ﻿@using WebApp.Models;
 
 @inject IJSRuntime JS
-@inject WebApp.Services.Repositories.JobDescriptionRespository JobDescriptionRepo
-@inject WebApp.Services.Repositories.JobProviderRespository JobProviderRepo
+@inject WebApp.Services.Repositories.JobRepository JobDescriptionRepo
+@inject WebApp.Services.Repositories.JobSourceRepository JobProviderRepo
 
 
 <EditForm method="post" Model="CreatedJobDescription" OnValidSubmit="AddJobDescription" FormName="create" Enhance class="p-10">
@@ -27,9 +27,9 @@
     [Parameter]
     public EventCallback OnDescriptionAdded { get; set; }
 
-    public JobDescription CreatedJobDescription { get; set; } = new();
+    public Job CreatedJobDescription { get; set; } = Job.Empty;
 
-    public List<JobProvider> ConfiguredProviders { get; set; } = new();
+    public List<JobSource> ConfiguredProviders { get; set; } = new();
     public HashSet<int> SelectedProviders { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
